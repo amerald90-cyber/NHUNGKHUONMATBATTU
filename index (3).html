@@ -5,18 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dự Án Những Gương Mặt Bất Tử - Hành Trình Số</title>
     
-    <!-- CHỐNG CACHE TRÌNH DUYỆT (BẮT BUỘC ĐỂ CẬP NHẬT NGAY) -->
+    <!-- CHỐNG CACHE -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/263/263062.png" type="image/png">
-    <meta name="description" content="Thắp sáng ký ức, sáng mãi tên anh. Dự án phục dựng ảnh liệt sĩ - Hành trình số Việt Nam My Love.">
-    <meta property="og:title" content="Dự Án Những Gương Mặt Bất Tử">
-    <meta property="og:description" content="Hành trình số - Thắp sáng ký ức, sáng mãi tên anh.">
-    <meta property="og:image" content="https://i.imgur.com/P9XX9X.jpg">
-    <meta property="og:type" content="website">
-    
     <style>
         body, html {
             margin: 0;
@@ -31,52 +25,47 @@
             width: 100%;
             height: 100%;
             display: block;
-            -webkit-overflow-scrolling: touch; 
         }
 
-        /* NÚT LOA ĐIỀU KHIỂN NHẠC */
-        #music-control {
+        /* NÚT LOA ĐIỀU KHIỂN */
+        #music-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 25px;
+            right: 25px;
             z-index: 9999;
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             border: 2px solid #fff;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-            transition: transform 0.3s;
-        }
-        #music-control:active {
-            transform: scale(0.9);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
         #music-icon {
-            width: 24px;
-            height: 24px;
+            width: 25px;
+            height: 25px;
             filter: invert(1);
         }
-        /* Hiệu ứng sóng nhạc khi đang phát */
-        .playing {
+        /* Hiệu ứng rung khi có nhạc */
+        .is-playing {
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
         }
     </style>
 </head>
 <body>
 
     <!-- NÚT LOA -->
-    <div id="music-control" onclick="toggleMusic()">
-        <img id="music-icon" src="https://cdn-icons-png.flaticon.com/512/727/727269.png" alt="Loa">
+    <div id="music-btn" onclick="toggleMusic()">
+        <img id="music-icon" src="https://cdn-icons-png.flaticon.com/512/727/727269.png" alt="Play">
     </div>
 
     <!-- NHẠC NỀN -->
@@ -86,43 +75,39 @@
 
     <script>
         var audio = document.getElementById('bgMusic');
-        var control = document.getElementById('music-control');
+        var btn = document.getElementById('music-btn');
         var icon = document.getElementById('music-icon');
-        var hasStarted = false;
 
-        // Hàm bật/tắt nhạc
         function toggleMusic() {
             if (audio.paused) {
                 audio.play();
-                icon.src = "https://cdn-icons-png.flaticon.com/512/727/727269.png"; // Icon loa bật
-                control.classList.add('playing');
+                btn.classList.add('is-playing');
+                icon.src = "https://cdn-icons-png.flaticon.com/512/727/727269.png"; 
             } else {
                 audio.pause();
-                icon.src = "https://cdn-icons-png.flaticon.com/512/3103/3103443.png"; // Icon loa tắt
-                control.classList.remove('playing');
+                btn.classList.remove('is-playing');
+                icon.src = "https://cdn-icons-png.flaticon.com/512/3103/3103443.png"; 
             }
         }
 
-        // Tự động phát khi người dùng chạm vào bất cứ đâu trên màn hình lần đầu tiên
-        window.addEventListener('touchstart', function() {
-            if(!hasStarted) {
+        // Tự động phát ngay khi người dùng chạm vào bất kỳ đâu trên màn hình
+        document.addEventListener('click', function() {
+            if (audio.paused) {
                 audio.play();
-                control.classList.add('playing');
-                hasStarted = true;
+                btn.classList.add('is-playing');
             }
-        }, {once: true});
+        }, { once: true });
 
-        window.addEventListener('click', function() {
-            if(!hasStarted) {
+        document.addEventListener('touchstart', function() {
+            if (audio.paused) {
                 audio.play();
-                control.classList.add('playing');
-                hasStarted = true;
+                btn.classList.add('is-playing');
             }
-        }, {once: true});
+        }, { once: true });
     </script>
 
     <iframe 
-      src="https://script.google.com/macros/s/AKfycbwsiZW2nFBAILkM_uZfYgBFEr1Hq_KEgOo3XQ1SGBtvmGKUsLKmMiLWLak8107Cj2bD/exec" 
+        src="https://script.google.com/macros/s/AKfycbwsiZW2nFBAILkM_uZfYgBFEr1Hq_KEgOo3XQ1SGBtvmGKUsLKmMiLWLak8107Cj2bD/exec?ver=update_new" 
         title="Những Gương Mặt Bất Tử"
         allow="camera; microphone; autoplay; clipboard-write; encrypted-media; picture-in-picture" 
         allowfullscreen>
