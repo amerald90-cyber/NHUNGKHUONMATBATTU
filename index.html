@@ -27,41 +27,35 @@
             display: block;
         }
 
-        /* NÚT ĐIỀU KHIỂN NHẠC */
+        /* NÚT LOA ĐIỀU KHIỂN */
         #music-btn {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            bottom: 25px;
+            right: 25px;
             z-index: 9999;
-            width: 55px;
-            height: 55px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
+            border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: none; /* Ẩn cho đến khi load được nhạc */
         }
-
         #music-icon {
-            width: 28px;
-            height: 28px;
+            width: 25px;
+            height: 25px;
             filter: invert(1);
         }
-
-        /* Hiệu ứng sóng nhạc khi đang phát */
         .is-playing {
-            animation: pulse-ring 1.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
-            background: rgba(255, 255, 255, 0.4) !important;
+            animation: pulse 1.5s infinite;
         }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
         }
@@ -71,60 +65,74 @@
 
     <!-- NÚT LOA -->
     <div id="music-btn" onclick="toggleMusic()">
-        <img id="music-icon" src="https://cdn-icons-png.flaticon.com/512/727/727269.png" alt="Play/Pause">
+        <img id="music-icon" src="https://cdn-icons-png.flaticon.com/512/727/727269.png" alt="Play">
     </div>
 
-    <!-- NHẠC NỀN TỪ GOOGLE DRIVE -->
-    <audio id="bgMusic" loop>
-        <source src="https://docs.google.com/uc?export=download&id=1BiuyiKZIjREMzlH13BQHwsQB2V81gTku" type="audio/mpeg">
-    </audio>
+    <!-- NHẠC NỀN -->
+    <audio id="bgMusic" loop></audio>
 
     <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwsiZW2nFBAILkM_uZfYgBFEr1Hq_KEgOo3XQ1SGBtvmGKUsLKmMiLWLak8107Cj2bD/exec?ver=update_new";
         var audio = document.getElementById('bgMusic');
         var btn = document.getElementById('music-btn');
         var icon = document.getElementById('music-icon');
 
-        // Hình ảnh icon
-        var iconPlay = "https://cdn-icons-png.flaticon.com/512/727/727269.png"; // Icon đang phát (Loa)
-        var iconPause = "https://cdn-icons-png.flaticon.com/512/3103/3103443.png"; // Icon dừng (Mute)
+        // Hàm chuyển đổi link Google Drive sang link chạy trực tiếp
+        function formatDriveLink(link) {
+            if (link.includes('drive.google.com')) {
+                let id = link.split('/d/')[1]?.split('/')[0] || link.split('id=')[1]?.split('&')[0];
+                return `https://docs.google.com/uc?export=download&id=${id}`;
+            }
+            return link;
+        }
 
-        function toggleMusic() {
-            if (audio.paused) {
-                playMusic();
-            } else {
-                pauseMusic();
+        // TỰ ĐỘNG LẤY NHẠC TỪ SHEET
+        async function loadMusicFromSheet() {
+            try {
+                const response = await fetch(GAS_URL);
+                const data = await response.json();
+                
+                // Tìm dòng có tiêu đề là "NHẠC"
+                const musicData = data.find(item => item.name === "NHẠC" || item.title === "NHẠC");
+                
+                if (musicData) {
+                    // Lấy link từ cột chứa nội dung (thường là musicData.link hoặc musicData.content tùy cấu trúc Sheet của bạn)
+                    let rawLink = musicData.link || musicData.content || musicData.url;
+                    if (rawLink) {
+                        audio.src = formatDriveLink(rawLink);
+                        btn.style.display = "flex"; // Hiện nút nhạc khi đã có link
+                        console.log("Đã tìm thấy bài hát dự án!");
+                    }
+                }
+            } catch (e) {
+                console.log("Không thể kết nối Sheet để lấy nhạc:", e);
             }
         }
 
-        function playMusic() {
-            audio.play().catch(function(error) {
-                console.log("Trình duyệt chặn tự động phát, chờ tương tác người dùng.");
-            });
-            btn.classList.add('is-playing');
-            icon.src = iconPlay;
+        function toggleMusic() {
+            if (audio.paused) {
+                audio.play();
+                btn.classList.add('is-playing');
+                icon.src = "https://cdn-icons-png.flaticon.com/512/727/727269.png"; 
+            } else {
+                audio.pause();
+                btn.classList.remove('is-playing');
+                icon.src = "https://cdn-icons-png.flaticon.com/512/3103/3103443.png"; 
+            }
         }
 
-        function pauseMusic() {
-            audio.pause();
-            btn.classList.remove('is-playing');
-            icon.src = iconPause;
-        }
+        // Kích hoạt nhạc khi chạm lần đầu
+        document.addEventListener('click', function() {
+            if (audio.paused && audio.src) {
+                audio.play();
+                btn.classList.add('is-playing');
+            }
+        }, { once: true });
 
-        // TỰ ĐỘNG PHÁT KHI CÓ TƯƠNG TÁC ĐẦU TIÊN (Để lách luật trình duyệt)
-        function autoPlayOnFirstInteraction() {
-            playMusic();
-            // Sau khi phát lần đầu, gỡ bỏ các sự kiện này để không bị lặp lại
-            document.removeEventListener('click', autoPlayOnFirstInteraction);
-            document.removeEventListener('touchstart', autoPlayOnFirstInteraction);
-            document.removeEventListener('scroll', autoPlayOnFirstInteraction);
-        }
-
-        document.addEventListener('click', autoPlayOnFirstInteraction);
-        document.addEventListener('touchstart', autoPlayOnFirstInteraction);
-        document.addEventListener('scroll', autoPlayOnFirstInteraction);
+        // Khởi chạy lấy dữ liệu
+        loadMusicFromSheet();
     </script>
 
-    <!-- NỘI DUNG CHÍNH (IFRAME) -->
     <iframe 
         src="https://script.google.com/macros/s/AKfycbwsiZW2nFBAILkM_uZfYgBFEr1Hq_KEgOo3XQ1SGBtvmGKUsLKmMiLWLak8107Cj2bD/exec?ver=update_new" 
         title="Những Gương Mặt Bất Tử"
