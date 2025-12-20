@@ -3,105 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Những Gương Mặt Bất Tử - Dự Án Âm Nhạc</title>
+    <title>Những Gương Mặt Bất Tử</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #1a002e; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #240046; }
+        iframe { border: none; width: 100%; height: 100%; display: block; position: relative; z-index: 1; }
         
-        /* IFRAME CHÍNH */
-        iframe { border: none; width: 100%; height: 100%; display: block; position: relative; z-index: 10; }
-
-        /* NÚT LOA - SIÊU CẤP ƯU TIÊN */
         #music-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 999999; /* Luôn nằm trên Iframe */
-            width: 65px;
-            height: 65px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 2px solid #fff;
-            box-shadow: 0 0 30px rgba(0,0,0,0.6);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: fixed; bottom: 30px; right: 30px; z-index: 999999;
+            width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 3px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
-        #music-icon { width: 35px; height: 35px; filter: invert(1); }
-
-        /* Hiệu ứng rung nhịp theo bài hát */
-        .pulse-active {
-            animation: heartBeat 1.5s infinite;
-            background: rgba(255, 255, 255, 0.4) !important;
-        }
-
-        @keyframes heartBeat {
+        #music-icon { width: 30px; height: 30px; filter: invert(1); }
+        
+        .pulse { animation: pulse-anim 1.5s infinite; background: rgba(255,255,255,0.4) !important; }
+        @keyframes pulse-anim {
             0% { transform: scale(1); }
-            14% { transform: scale(1.15); }
-            28% { transform: scale(1); }
-            42% { transform: scale(1.15); }
-            70% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <!-- NÚT BẤM -->
     <div id="music-btn" onclick="toggleMusic()">
-        <img id="music-icon" src="https://cdn-icons-png.flaticon.com/512/3103/3103443.png" alt="Play/Pause">
+        <img id="music-icon" src="https://cdn-icons-png.flaticon.com/512/3103/3103443.png" alt="Icon">
     </div>
 
-    <!-- AUDIO VỚI LINK BẠN GỬI -->
-    <audio id="bgMusic" loop preload="auto">
-        <source src="https://docs.google.com/uc?export=download&id=1BiuyiKZIjREMzlH13BQHwsQB2V81gTku" type="audio/mpeg">
-    </audio>
+    <!-- AUDIO -->
+    <audio id="bgMusic" loop preload="auto"></audio>
 
     <script>
+        // THAY LINK SCRIPT CỦA BẠN VÀO ĐÂY
+        const APP_URL = "https://script.google.com/macros/s/AKfycbwsiZW2nFBAILkM_uZfYgBFEr1Hq_KEgOo3XQ1SGBtvmGKUsLKmMiLWLak8107Cj2bD/exec";
+        
         var audio = document.getElementById('bgMusic');
         var btn = document.getElementById('music-btn');
         var icon = document.getElementById('music-icon');
 
-        var iconPlay = "https://cdn-icons-png.flaticon.com/512/727/727269.png"; // Loa đang mở
-        var iconMute = "https://cdn-icons-png.flaticon.com/512/3103/3103443.png"; // Loa đang tắt
+        // Hàm xử lý link Drive thành link phát trực tiếp chuẩn 2025
+        function fixLink(url) {
+            if (!url) return "";
+            var id = url.match(/[-\w]{25,}/);
+            return id ? "https://drive.google.com/uc?export=download&id=" + id[0] : url;
+        }
+
+        // Lấy link nhạc từ Sheet
+        async function initMusic() {
+            try {
+                const resp = await fetch(APP_URL + "?get=music");
+                const link = await resp.text();
+                if (link) {
+                    audio.src = fixLink(link);
+                    console.log("Đã nạp nhạc từ Sheet");
+                }
+            } catch (e) {
+                // Nếu lỗi Sheet, dùng link dự phòng của bạn
+                audio.src = "https://drive.google.com/uc?export=download&id=1BiuyiKZIjREMzlH13BQHwsQB2V81gTku";
+            }
+        }
 
         function toggleMusic() {
             if (audio.paused) {
-                audio.play();
-                btn.classList.add('pulse-active');
-                icon.src = iconPlay;
+                audio.play().then(() => {
+                    btn.classList.add('pulse');
+                    icon.src = "https://cdn-icons-png.flaticon.com/512/727/727269.png";
+                }).catch(err => alert("Vui lòng thử lại sau giây lát để nhạc tải xong."));
             } else {
                 audio.pause();
-                btn.classList.remove('pulse-active');
-                icon.src = iconMute;
+                btn.classList.remove('pulse');
+                icon.src = "https://cdn-icons-png.flaticon.com/512/3103/3103443.png";
             }
         }
 
-        // Kỹ thuật "Force Play" của chuyên gia: 
-        // Nhạc sẽ tự phát ngay khi người dùng chạm vào bất kỳ đâu trên màn hình
-        function initAudio() {
-            if (audio.paused) {
-                audio.play().then(() => {
-                    btn.classList.add('pulse-active');
-                    icon.src = iconPlay;
-                });
-            }
-            window.removeEventListener('click', initAudio);
-            window.removeEventListener('touchstart', initAudio);
-        }
+        // Phát nhạc khi chạm lần đầu
+        document.addEventListener('click', () => { if(audio.paused) toggleMusic(); }, {once: true});
+        document.addEventListener('touchstart', () => { if(audio.paused) toggleMusic(); }, {once: true});
 
-        window.addEventListener('click', initAudio);
-        window.addEventListener('touchstart', initAudio);
+        initMusic();
     </script>
 
-    <!-- TRANG WEB CHÍNH -->
-    <iframe 
-        src="https://script.google.com/macros/s/AKfycbzO4zxjgwagkEvVISSDpYtlr1Aw24riOWkPW5DEirMT454izAbMtt6V5s9Xi0cbNkKS/exec" 
-        allow="autoplay">
-    </iframe>
+    <iframe src="https://script.google.com/macros/s/AKfycby7kkLlTjzMMrAeqH2rwLoRF3S6o8kZaHgWAH7ELPC99NULw4D_16uXTg_UUL5sYDkO/exec" allow="autoplay"></iframe>
 
 </body>
 </html>
